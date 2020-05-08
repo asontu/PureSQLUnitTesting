@@ -106,6 +106,7 @@ select
 	declare @name nvarchar(255)
 	declare @utprefix nvarchar(255)
 	declare @envprefix nvarchar(255)
+	declare @sqlmock nvarchar(max)
 	declare @sqlpre nvarchar(max)
 	declare @sqlact nvarchar(max)
 	declare @sqlassert nvarchar(max)
@@ -167,7 +168,7 @@ select
 				)
 				.value('.', 'nvarchar(max)'),
 				
-			@sqlpre = 
+			@sqlmock = 
 				(
 					select replace(replace(@CREATE_TABLE_SNIP,
 							'_UT_TABLENAME_',  @utprefix  + t.tablename),
@@ -195,7 +196,9 @@ select
 					group by t.tablename
 					for xml path(''), type
 				)
-				.value('.', 'nvarchar(max)') +
+				.value('.', 'nvarchar(max)'),
+				
+			@sqlpre =
 				case (select count(*) from returntable) when 0 then '' else
 					replace(@CREATE_RETURN_SNIP, '_TABLECOLUMNS_', (
 						select ',' + @nl +
@@ -230,7 +233,7 @@ select
 				)
 				.value('.', 'nvarchar(max)')
 
-			set @sqltotal = @sqlpost + @sqlpre + @sqlact + @sqlassert + @sqlpost
+			set @sqltotal = isnull(@sqlpost + @sqlmock, '') + @sqlpre + @sqlact + @sqlassert + isnull(@sqlpost, '')
 
 			exec sp_executesql @sqltotal,
 				N'@testxml xml, @sqltotal nvarchar(max)', @testxml, @sqltotal
