@@ -37,6 +37,55 @@ go
 create procedure RunUnitTests(@unittests xml)
 as begin
 	set nocount on
+	
+	declare @DROP_TABLE_SNIP nvarchar(255) = '
+if object_id(''tempdb.._TABLENAME_'') is not null
+	drop table _TABLENAME_
+'
+	declare @CREATE_TABLE_SNIP nvarchar(255) = '
+select top 0 *
+into _UT_TABLENAME_
+from _DEV_TABLENAME_
+'
+	declare @INSERT_SNIP nvarchar(255) = '
+insert into _TABLENAME_(_TABLECOLUMNS_)
+values
+	_VALUES_
+'
+	declare @CREATE_RETURN_SNIP nvarchar(255) = '
+if object_id(''tempdb..#utreturns'') is not null
+	drop table #utreturns
+
+create table #utreturns (
+	_TABLECOLUMNS_
+)
+'
+	declare @INSERT_RETURN_SNIP nvarchar(255) =
+'insert into #utreturns(_TABLECOLUMNS_)
+	'
+	declare @ACT_SNIP nvarchar(255) = '
+declare @error varchar(1000)
+begin try
+	_EXEC_ACT_
+end try
+begin catch
+	set @error = error_message()
+end catch
+'
+	declare @INSERT_RESULT_SNIP nvarchar(511) = '
+insert into #testresults(name, test, expected, actual, pass, testxml, fullquery)
+select
+	''_TEST_NAME_'',
+	''_EXAMEN_ESC_'',
+	''_EXPECTED_ESC_'',
+	isnull(@error, cast((_EXAMEN_) as varchar(255))),
+	isnull(case 
+		when @error is not null then 0
+		when (_EXAMEN_) _EXPECTED_ then 1
+	end, 0),
+	@testxml,
+	@sqltotal
+'
 
 	if object_id('tempdb..#testresults') is not null
 		drop table #testresults
@@ -109,27 +158,25 @@ as begin
 				from @testxml.nodes('test/assert')ass(ert)
 			)
 			select
-				@sqlpost =
+			@sqlpost =
 				(
-					select
-						'if object_id(''tempdb..' + @utprefix + t.tablename + ''') is not null' + @nl +
-						'	drop table ' + @utprefix + t.tablename + @nl + @nl
+					select replace(@DROP_TABLE_SNIP, '_TABLENAME_', @utprefix + t.tablename)
 					from mockdata t
 					group by t.tablename
 					for xml path(''), type
 				)
 				.value('.', 'nvarchar(max)'),
-				@sqlpre = 
+				
+			@sqlpre = 
 				(
-					select @nl + @nl +
-						'select top 0 *' + @nl + 
-						'into ' + @utprefix  + t.tablename + @nl +
-						'from ' + @envprefix + t.tablename + @nl +
+					select replace(replace(@CREATE_TABLE_SNIP,
+							'_UT_TABLENAME_',  @utprefix  + t.tablename),
+							'_DEV_TABLENAME_', @envprefix + t.tablename) +
 						(
-							select @nl +
-								'insert into ' + @utprefix + c.tablename + '(' + c.tablecolumns + ')' + @nl +
-								'values' +
-								(
+							select replace(replace(replace(@INSERT_SNIP,
+								'_TABLENAME_', @utprefix + c.tablename),
+								'_TABLECOLUMNS_', c.tablecolumns),
+								'_VALUES_', (
 									select ',' + @nl +
 										'	(' + d.tablevalues + ')'
 									from mockdata d
@@ -137,7 +184,7 @@ as begin
 									  and d.tablecolumns = c.tablecolumns
 									for xml path(''), type
 								)
-								.value('fn:substring(., 2)', 'nvarchar(max)')
+								.value('fn:substring(., 5)', 'nvarchar(max)'))
 							from mockdata c
 							where c.tablename = t.tablename
 							group by c.tablename, c.tablecolumns
@@ -148,54 +195,42 @@ as begin
 					group by t.tablename
 					for xml path(''), type
 				)
-				.value('.', 'nvarchar(max)') + @nl + @nl +
+				.value('.', 'nvarchar(max)') +
 				case (select count(*) from returntable) when 0 then '' else
-					'if object_id(''tempdb..#utreturns'') is not null' + @nl +
-					'	drop table #utreturns' + @nl + @nl +
-					'create table #utreturns (' + @nl +
-					(
+					replace(@CREATE_RETURN_SNIP, '_TABLECOLUMNS_', (
 						select ',' + @nl +
 							'	' + colname + ' ' + coltype
 						from returntable
 						for xml path(''), type
 					)
-					.value('fn:substring(., 4)', 'nvarchar(max)') + @nl +
-					')'
+					.value('fn:substring(., 4)', 'nvarchar(max)'))
 				end,
-				@sqlact = 'declare @error varchar(1000)' + @nl +
-				'begin try' + @nl +
+				
+			@sqlact = replace(@ACT_SNIP, '_EXEC_ACT_',
 				case (select count(*) from returntable) when 0 then '' else
-					'	insert into #utreturns(' +
-					(
+					replace(@INSERT_RETURN_SNIP, '_TABLECOLUMNS_', (
 						select ',' + colname
 						from returntable
 						for xml path(''), type
 					)
-					.value('fn:substring(., 2)', 'nvarchar(max)') + ')' + @nl
+					.value('fn:substring(., 2)', 'nvarchar(max)'))
 				end +
-				'	' + trim(@testxml.value('(test/act)[1]', 'nvarchar(max)')) + @nl +
-				'end try' + @nl +
-				'begin catch' + @nl +
-				'	set @error = error_message()' + @nl +
-				'end catch',
-				@sqlassert =
+				trim(@testxml.value('(test/act)[1]', 'nvarchar(max)'))),
+				
+			@sqlassert =
 				(
-					select @nl + @nl +
-						'insert into #testresults(name, test, expected, actual, pass, testxml, fullquery)' + @nl +
-						'select ' + @nl +
-						'	''' + replace(@name,    '''', '''''') + ''',' + @nl +
-						'	''' + replace(examen,   '''', '''''') + ''',' + @nl +
-						'	''' + replace(expected, '''', '''''') + ''',' + @nl +
-						'	isnull(@error, cast((' + examen + ') as varchar(255))),' + @nl +
-						'	isnull(case when @error is not null then 0 when (' + examen + ') ' + expected + ' then 1 end, 0),' + @nl +
-						'	@testxml,' + @nl +
-						'	@sqltotal'
+					select replace(replace(replace(replace(replace(@INSERT_RESULT_SNIP,
+						'_TEST_NAME_',    replace(@name,    '''', '''''')),
+						'_EXAMEN_ESC_',   replace(examen,   '''', '''''')),
+						'_EXPECTED_ESC_', replace(expected, '''', '''''')),
+						'_EXAMEN_', examen),
+						'_EXPECTED_', expected)
 					from assertions
 					for xml path(''), type
 				)
 				.value('.', 'nvarchar(max)')
 
-			set @sqltotal = @sqlpost + @sqlpre + @nl + @nl + @sqlact + @sqlassert + @nl + @nl + @sqlpost
+			set @sqltotal = @sqlpost + @sqlpre + @sqlact + @sqlassert + @sqlpost
 
 			exec sp_executesql @sqltotal,
 				N'@testxml xml, @sqltotal nvarchar(max)', @testxml, @sqltotal
