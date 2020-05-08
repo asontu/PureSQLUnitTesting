@@ -90,7 +90,7 @@ as begin
 					tablevalues =
 					(
 						select ', ' + 
-							'''' + co.l.value('.', 'nvarchar(255)') + ''''
+							'''' + replace(co.l.value('.', 'nvarchar(max)'), '''', '''''') + ''''
 						from mo.ck.nodes('./@*')co(l)
 						order by co.l.value('local-name(.)', 'nvarchar(255)')
 						for xml path(''), type
