@@ -121,7 +121,7 @@ select
 
 			set @name = @testxml.value('(test/@name)[1]', 'nvarchar(255)')
 			set @utprefix = @testxml.value('(test/prefix/@ut)[1]', 'nvarchar(255)')
-			set @envprefix = @testxml.value('(test/prefix/@dev)[1]', 'nvarchar(255)')
+			set @envprefix = isnull(@testxml.value('(test/prefix/@dev)[1]', 'nvarchar(255)'), '')
 
 			;with mockdata as (
 				select
