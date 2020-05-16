@@ -10,7 +10,7 @@ go
  *
  *	<unittests>
  *		<test name="name of test">
- *			<prefix dev="tblprefix_" ut="#" />
+ *			<prefix dev="dbo." ut="#" />
  *			<mock>
  *				<mytable mycol="testvalue" />
  *			</mock>
@@ -24,15 +24,13 @@ go
  *		</test>
  *	</unittests>
  *
- * The above snippet would mock existing table
- * [tbleprefix_mytable] with 1 row of data. This
- * row would have "testvalue" for its [mycol]-
- * column.
- * It would then run exec MyStoredProc and
- * expect a resultset of 1 column with type
- * varchar(10). It would then look at 
- * (select returncol from #utreturns) and assert
- * that it = 'testvalue'.
+ *	The above snippet mocks existing table dbo.mytable
+ *	with 1 row of data. This row contains "testvalue"
+ *	it for its [mycol]- column.
+ *	Then it runs exec MyStoredProc and expects a
+ *	resultset of 1 column with type varchar(10).
+ *	Finally it looks at (select returncol from #utreturns)
+ *	and assert that it = 'testvalue'.
  */
 create procedure RunUnitTests(@unittests xml)
 as begin
