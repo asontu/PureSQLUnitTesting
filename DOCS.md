@@ -8,13 +8,37 @@ To install, simply run the `DeployObjects.sql` and `RunUnitTests.sql` files on t
 
 ## Prepare Stored Proc for testing
 
-Either deploy your stored proc to a UnitTest-variant with `DeployObjects` or write the UnitTest-variant and deploy after it passes all tests.
+The UnitTests run on an altered version of the stored procedures being tested. You can prepare the stored proc with `DeployObjects`, which makes it easy to create a copy of stored procedures with small alterations.
+
+`DeployObjects` accepts the follow input XML:
+
+`exec DeployObjects '<deployment>`
+-	`<replace from="dbo." to="#unittest_" />` _(optional)_  
+	One or more replace-operations that are applied to the contents and name of the Stored Proc being deployed.
+-	`<deploy>TotalsPerCustomer</deploy>` **(mandatory)**  
+	One or more objects to deploy. Because of historic reasons these can also be views or functions besides just stored procs. Currently PureSQLUnitTesting does not work with functions that query tables nor with views (which by definition query tables).
+
+`</deployment>'`
+
+### Test Driven Development: Flip the script
+
+Since blindly replacing all instances of `dbo.` with `#unittest_` might not be the best approach in some cases, for instance if the stored procedures being tested call other stored procedures with the same schema prefix `dbo.` as the tables it queries. In this case, it might be better to write the Stored Procedure as the UnitTest-variant, then run the UnitTests first, and only when all the UnitTests pass, use `DeployObjects` to deploy the stored proc to a production-ready variant.
+
+In this case the `from=""` and `to=""` attribute values would be flipped:
+
+```sql
+exec DeployObjects '<deployment>
+	<replace from="#unittest_" to="dbo." />
+	<replace from="_UTST" to="" />
+	<deploy>TotalsPerCustomer_UTST</deploy>
+</deployment>'
+```
 
 ## Write and run a UnitTest
 
 UnitTests follow the basic **Arrange** -> **Act** -> **Assert** pattern. **Arranging** in this case means mocking tables (or views). As well, because stored procs ofter return result-sets, a little more time is spend on describing what that result-set looks like before moving on to **Assert** things about it.
 
-The `RunUnitTests` proc accepts the following XML:
+The `RunUnitTests` proc accepts the following input XML:
 
 `exec RunUnitTests '<unittests>`
 -	`<test name="Name of this test">`
