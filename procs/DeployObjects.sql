@@ -23,6 +23,8 @@ as begin
 
 	insert into @types
 	values ('P', 'procedure'),
+		('FN', 'function'),
+		('TF', 'function'),
 		('IF', 'function'),
 		('V', 'view')
 
