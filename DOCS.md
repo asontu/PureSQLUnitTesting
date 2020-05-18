@@ -1,12 +1,15 @@
-# Documentation
+Documentation
+=============
 
 This is the full documentation, for a quick overview take a look at the [README](./README.md).
 
-## Installation
+Installation
+------------
 
 To install, simply run the `DeployObjects.sql` and `RunUnitTests.sql` files on the SQL server instance where the UnitTests will be run.
 
-## Prepare Stored Proc for testing
+Prepare Stored Proc for testing
+-------------------------------
 
 The UnitTests run on an altered version of the stored procedures being tested. You can prepare the stored proc with `DeployObjects`, which makes it easy to create a copy of stored procedures with small alterations.
 
@@ -34,7 +37,8 @@ exec DeployObjects '<deployment>
 </deployment>'
 ```
 
-## Write and run a UnitTest
+Write and run a UnitTest
+------------------------
 
 UnitTests follow the basic **Arrange** -> **Act** -> **Assert** pattern. **Arranging** in this case means mocking tables (or views). As well, because stored procs ofter return result-sets, a little more time is spend on describing what that result-set looks like before moving on to **Assert** things about it.
 
@@ -77,7 +81,8 @@ The `RunUnitTests` proc accepts the following input XML:
 
 `</unittests>'`
 
-## Interpret test-results
+Interpret test-results
+----------------------
 
 Running the above UnitTest might yield a result-set like this:
 

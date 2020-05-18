@@ -1,4 +1,5 @@
-# PureSQLUnitTesting
+PureSQLUnitTesting
+==================
 
 With these purely T-SQL procedures it's easy to make UnitTests for Stored Procedures. It's a very minimalist approach, which brings some limitations, but also provides a very low barrier of entry to start UnitTesting SQL code. For full usage documentation check out the [DOCS](./DOCS.md).
 
@@ -102,6 +103,7 @@ exec DeployObjects @deployment =
 	</deployment>'
 ```
 
-## Installation
+Installation
+------------
 
 To install, simply run the `DeployObjects.sql` and `RunUnitTests.sql` files on your SQL server to add the procedures.
