@@ -15,7 +15,7 @@ create table MyTable (
 
 ### Develop normally, deploy UnitTest variant
 
-Write your code like you're used to, but be consistent to use `dbo.` in front of any tables:
+Write your code like you're used to, but be consistent and prefix the schema (`dbo.`) in front of any tables:
 
 ```sql
 create procedure AddTotalsLine(@description nvarchar(255) = null)
@@ -30,7 +30,7 @@ end
 "Deploy" the Stored Procedure to a UnitTest variant, where `dbo.` get replaced with `#unittest_` and the Stored Procedure name `AddTotalsLine` turns into `AddTotalsLine_UTST`.
 
 ```sql
-exec DeployObjects @deployment = 
+exec DeployObjects
 	'<deployment>
 		<replace from="dbo." to="#unittest_" />
 		<replace from="AddTotalsLine" to="AddTotalsLine_UTST" />
@@ -42,23 +42,23 @@ exec DeployObjects @deployment =
 With this UnitTest variant you can then perform UnitTests:
 
 ```sql
-exec RunUnitTests @unittests = 
-'<unittests>
-	<test name="Add Subtotal line with sum of price from apples and pears lines">
-		<prefix dev="dbo." ut="#unittest_" />
-		<mock>
-			<MyTable description="apples" price="1.25" />
-			<MyTable description="pears" price="1.45" />
-		</mock>
-		<act>exec AddTotalsLine_UTST</act>
-		<assert expected=" = 3">
-			select count(*) from #unittest_MyTable
-		</assert>
-		<assert expected=" = 2.70">
-			select top 1 price from #unittest_MyTable where description like ''Subtotal%''
-		</assert>
-	</test>
-</unittests>'
+exec RunUnitTests
+	'<unittests>
+		<test name="Add Subtotal line with sum of price from apples and pears lines">
+			<prefix dev="dbo." ut="#unittest_" />
+			<mock>
+				<MyTable description="apples" price="1.25" />
+				<MyTable description="pears" price="1.45" />
+			</mock>
+			<act>exec AddTotalsLine_UTST</act>
+			<assert expected=" = 3">
+				select count(*) from #unittest_MyTable
+			</assert>
+			<assert expected=" = 2.70">
+				select top 1 price from #unittest_MyTable where description like ''Subtotal%''
+			</assert>
+		</test>
+	</unittests>'
 ```
 
 ### TDD: develop based on UnitTests, then deploy
@@ -75,26 +75,26 @@ as begin
 end
 go
 
-exec RunUnitTests @unittests = 
-'<unittests>
-	<test name="Add Subtotal line with sum of price from apples and pears lines">
-		<prefix ut="#unittest_" />
-		<mock>
-			<MyTable description="apples" price="1.25" />
-			<MyTable description="pears" price="1.45" />
-		</mock>
-		<act>exec AddTotalsLine_UTST</act>
-		<assert expected=" = 3">
-			select count(*) from #unittest_MyTable
-		</assert>
-		<assert expected=" = 2.70">
-			select top 1 price from #unittest_MyTable where description like ''Subtotal%''
-		</assert>
-	</test>
-</unittests>'
+exec RunUnitTests
+	'<unittests>
+		<test name="Add Subtotal line with sum of price from apples and pears lines">
+			<prefix ut="#unittest_" />
+			<mock>
+				<MyTable description="apples" price="1.25" />
+				<MyTable description="pears" price="1.45" />
+			</mock>
+			<act>exec AddTotalsLine_UTST</act>
+			<assert expected=" = 3">
+				select count(*) from #unittest_MyTable
+			</assert>
+			<assert expected=" = 2.70">
+				select top 1 price from #unittest_MyTable where description like ''Subtotal%''
+			</assert>
+		</test>
+	</unittests>'
 go
 
-exec DeployObjects @deployment = 
+exec DeployObjects
 	'<deployment>
 		<replace from="#unittest_" to="dbo." />
 		<replace from="_UTST" to="" />

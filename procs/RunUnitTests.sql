@@ -165,7 +165,7 @@ select
 					for xml path(''), type
 				)
 				.value('.', 'nvarchar(max)'),
-				
+
 			@sqlmock = 
 				(
 					select replace(replace(@CREATE_TABLE_SNIP,
@@ -195,7 +195,7 @@ select
 					for xml path(''), type
 				)
 				.value('.', 'nvarchar(max)'),
-				
+
 			@sqlpre =
 				case (select count(*) from returntable) when 0 then '' else
 					replace(@CREATE_RETURN_SNIP, '_TABLECOLUMNS_', (
@@ -206,7 +206,7 @@ select
 					)
 					.value('fn:substring(., 4)', 'nvarchar(max)'))
 				end,
-				
+
 			@sqlact = replace(@ACT_SNIP, '_EXEC_ACT_',
 				case (select count(*) from returntable) when 0 then '' else
 					replace(@INSERT_RETURN_SNIP, '_TABLECOLUMNS_', (
@@ -217,7 +217,7 @@ select
 					.value('fn:substring(., 2)', 'nvarchar(max)'))
 				end +
 				trim(@testxml.value('(test/act)[1]', 'nvarchar(max)'))),
-				
+
 			@sqlassert =
 				(
 					select replace(replace(replace(replace(replace(@INSERT_RESULT_SNIP,
