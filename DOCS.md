@@ -76,3 +76,31 @@ The `RunUnitTests` proc accepts the following input XML:
 -	`</test>`
 
 `</unittests>'`
+
+## Interpret test-results
+
+Running the above UnitTest might yield a result-set like this:
+
+| id  |      name       |                                 test                                 | expected | actual | pass |                        testxml                        |             fullquery             |
+| --- | --------------- | -------------------------------------------------------------------- | -------- | ------ | ---- | ----------------------------------------------------- | --------------------------------- |
+|  1  |Name of this test|select total_excl_vat from #utreturns where customer_name = 'Jane Doe'|  = 14.60 |  14.6  |  1   |[<test name="Name of this ...](#interpret-test-results)|if object_id('tempdb..#unittest_...|
+|  2  |Name of this test|select total_incl_vat from #utreturns where customer_name = 'Jane Doe'|  = 16.06 |  1.46  |  0   |[<test name="Name of this ...](#interpret-test-results)|if object_id('tempdb..#unittest_...|
+
+It looks like the stored proc we're testing calculates the VAT correctly but doesn't add it to the total. Here's a detailed description of all the return columns:
+
+1.	**id**  
+	Auto-incremented number based on the order of **Assert** operations performed.
+2.	**name**  
+	The name as defined in the `<test name=""` attribute. _(same for all **Assertions** of the same test)_
+3.	**test**  
+	The value that was tested in the **Assertion** as defined in the `<assert>`-body.
+4.	**expected**  
+	The condition that the tested value is expected to meet as defined in the `<assert expected=""` attribute.
+5.	**actual**  
+	What the tested value actually returned. Or in case of an error, the contents of `error_message()`.
+6.	**pass** _(bit)_  
+	Whether this **Assertion** passed the test. Contains `1` if **actual** meets condition **expected** and no error was caught, otherwise contains `0`.
+7.	**testxml**  
+	The xml-snippet that this test was based on. Contains only the xml for that test, not the entire `<unittests>` xml document. _(same for all **Assertions** of the same test)_
+8.	**fullquery**  
+	The T-SQL query that was run to invoke the UnitTest. Usefull for examining or debugging tests that don't pass. The query contains indentation which you might want to keep by [retaining CR/LF on copy](https://www.c-sharpcorner.com/blogs/retain-carriage-return-and-line-feeds-on-copy-or-save-in-sql-server-2016) in SSMS. _(same for all **Assertions** of the same test)_
