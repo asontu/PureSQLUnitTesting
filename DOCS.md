@@ -25,7 +25,7 @@ The UnitTests run on an altered version of the stored procedures being tested. Y
 
 ### Test Driven Development: Flip the script
 
-Since blindly replacing all instances of `dbo.` with `#unittest_` might not be the best approach in some cases, for instance if the stored procedures being tested call other stored procedures with the same schema prefix `dbo.` as the tables it queries. In this case, it might be better to write the Stored Procedure as the UnitTest-variant, then run the UnitTests first, and only when all the UnitTests pass, use `DeployObjects` to deploy the stored proc to a production-ready variant.
+Since blindly replacing all instances of `dbo.` with `#unittest_` might not be the best approach in some cases, for instance if the stored procedures being tested calls other stored procedures with the same schema prefix `dbo.` as the tables it queries. In this case, it might be better to write the Stored Procedure as the UnitTest-variant, then run the UnitTests first, and only when all the UnitTests pass, use `DeployObjects` to deploy the stored proc to a production-ready variant.
 
 In this case the `from=""` and `to=""` attribute values would be flipped:
 
@@ -40,7 +40,7 @@ exec DeployObjects '<deployment>
 Write and run a UnitTest
 ------------------------
 
-UnitTests follow the basic **Arrange** -> **Act** -> **Assert** pattern. **Arranging** in this case means mocking tables (or views). As well, because stored procs ofter return result-sets, a little more time is spend on describing what that result-set looks like before moving on to **Assert** things about it.
+UnitTests follow the basic **Arrange** -> **Act** -> **Assert** pattern. **Arranging** in this case means mocking tables (or views). As well, because stored procs often return result-sets, a little more time is spend on describing what that result-set looks like before moving on to **Assert** things about it.
 
 The `RunUnitTests` proc accepts the following input XML:
 
@@ -75,7 +75,7 @@ The `RunUnitTests` proc accepts the following input XML:
 		-	`select count(*) from #utreturns`
 	-	`</assert>`
 	-	`<assert expected=" = 14.60">select total_excl_vat from #utreturns where customer_name = ''Jane Doe''</assert>`  
-		_(single quotes doubled here because we're inside a string)_
+		_(single quotes doubled here because this xml is defined with a single quote delimited string)_
 	-	`<assert expected=" = 16.06">select total_incl_vat from #utreturns where customer_name = ''Jane Doe''</assert>`
 -	`</test>`
 
@@ -108,4 +108,4 @@ It looks like the stored proc we're testing calculates the VAT correctly but doe
 7.	**testxml**  
 	The xml-snippet that this test was based on. Contains only the xml for that test, not the entire `<unittests>` xml document. _(same for all **Assertions** of the same test)_
 8.	**fullquery**  
-	The T-SQL query that was run to invoke the UnitTest. Usefull for examining or debugging tests that don't pass. The query contains indentation which you might want to keep by [retaining CR/LF on copy](https://www.c-sharpcorner.com/blogs/retain-carriage-return-and-line-feeds-on-copy-or-save-in-sql-server-2016) in SSMS. _(same for all **Assertions** of the same test)_
+	The T-SQL query that was run to invoke the UnitTest. Useful for examining or debugging tests that don't pass. The query contains indentation which you might want to keep by [retaining CR/LF on copy](https://www.c-sharpcorner.com/blogs/retain-carriage-return-and-line-feeds-on-copy-or-save-in-sql-server-2016) in SSMS. _(same for all **Assertions** of the same test)_

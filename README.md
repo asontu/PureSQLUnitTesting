@@ -3,7 +3,7 @@ PureSQLUnitTesting
 
 With these purely T-SQL procedures it's easy to make UnitTests for Stored Procedures. It's a very minimalist approach, which brings some limitations, but also provides a very low barrier of entry to start UnitTesting SQL code. For full usage documentation check out the [DOCS](./DOCS.md).
 
-The approach of PureSQLUnitTesting is that your Stored Procedures are copied and modified to do their work on temporary tables rather than the actual tables in the database. The modification is done with a simpel `replace()`, which means the writing of the Stored Procedures themselves needs to use prefixes to accommodate this. There's two approaches possible to achieve this, both examples below work on this table definition:
+The approach of PureSQLUnitTesting is that your Stored Procedures are copied and modified to do their work on temporary tables rather than the actual tables in the database. The modification is done with a simple `replace()`, which means the writing of the Stored Procedures themselves needs to use prefixes to accommodate this. There's two approaches possible to achieve this, both examples below work on this table definition:
 
 ```sql
 create table MyTable (
