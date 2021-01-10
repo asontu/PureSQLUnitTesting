@@ -6,7 +6,7 @@ This is the full documentation, for a quick overview take a look at the [README]
 Installation
 ------------
 
-To install, simply run the `DeployObjects.sql` and `RunUnitTests.sql` files on the SQL server instance where the UnitTests will be run.
+To install, simply run the `Release.sql` file on the SQL server instance where the UnitTests will be run.
 
 Prepare Stored Proc for testing
 -------------------------------

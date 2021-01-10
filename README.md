@@ -106,4 +106,4 @@ exec DeployObjects
 Installation
 ------------
 
-To install, simply run the `DeployObjects.sql` and `RunUnitTests.sql` files on your SQL server to add the procedures.
+To install, simply run the `Release.sql` file on your SQL server to add the procedures.
