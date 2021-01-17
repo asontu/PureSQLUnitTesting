@@ -81,6 +81,7 @@ The `RunUnitTests` proc accepts the following input XML:
 -	`<returns>` _(optional)_  
 	If multiple tests all return the same type of result-set, the `<returns>` part described above can be placed outside the tests. All tests that don't contain their own `<returns>` as a child-node will fall back on this.
 -	`</returns>`
+
 `</unittests>'`
 
 Interpret test-results
@@ -88,10 +89,10 @@ Interpret test-results
 
 Running the above UnitTest might yield a result-set like this:
 
-| id  |      name       |            act            |                                 test                                 | expected | actual | pass |                        testxml                        |             fullquery             |
-| --- | --------------- | ------------------------- | -------------------------------------------------------------------- | -------- | ------ | ---- | ----------------------------------------------------- | --------------------------------- |
-|  1  |Name of this test|exec TotalsPerCustomer_UTST|select total_excl_vat from #utreturns where customer_name = 'Jane Doe'|  = 14.60 |  14.6  |  1   |[<test name="Name of this ...](#interpret-test-results)|if object_id('tempdb..#unittest_...|
-|  2  |Name of this test|exec TotalsPerCustomer_UTST|select total_incl_vat from #utreturns where customer_name = 'Jane Doe'|  = 16.06 |  1.46  |  0   |[<test name="Name of this ...](#interpret-test-results)|if object_id('tempdb..#unittest_...|
+|<sub> id  </sub>|<sub>      name       </sub>|<sub>            act            </sub>|<sub>                                 test                                 </sub>|<sub> expected </sub>|<sub> actual </sub>|<sub> pass </sub>|<sub>                        testxml                        </sub>|<sub>             fullquery             </sub>|
+| -------------- | -------------------------- | ------------------------------------ | ------------------------------------------------------------------------------- | ------------------- | ----------------- | --------------- | ---------------------------------------------------------------- | -------------------------------------------- |
+|<sub>  1  </sub>|<sub>Name of this test</sub>|<sub>exec TotalsPerCustomer_UTST</sub>|<sub>select total_excl_vat from #utreturns where customer_name = 'Jane Doe'</sub>|<sub>  = 14.60 </sub>|<sub>  14.6  </sub>|<sub>  1   </sub>|<sub>[<test name="Name of this ...](#interpret-test-results)</sub>|<sub>if object_id('tempdb..#unittest_...</sub>|
+|<sub>  2  </sub>|<sub>Name of this test</sub>|<sub>exec TotalsPerCustomer_UTST</sub>|<sub>select total_incl_vat from #utreturns where customer_name = 'Jane Doe'</sub>|<sub>  = 16.06 </sub>|<sub>  1.46  </sub>|<sub>  0   </sub>|<sub>[<test name="Name of this ...](#interpret-test-results)</sub>|<sub>if object_id('tempdb..#unittest_...</sub>|
 
 It looks like the stored proc we're testing calculates the VAT correctly but doesn't add it to the total. Here's a detailed description of all the return columns:
 
