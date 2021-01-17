@@ -151,12 +151,13 @@ begin catch
 end catch
 '
 	declare @INSERT_RESULT_SNIP nvarchar(511) = '
-insert into #testresults(name, test, expected, actual, pass, testxml, fullquery)
+insert into #testresults(name, act, test, expected, actual, pass, testxml, fullquery)
 select
 	''_TEST_NAME_'',
+	''_ACT_ESC_'',
 	''_EXAMEN_ESC_'',
 	''_EXPECTED_ESC_'',
-	isnull(@error, cast((_EXAMEN_) as varchar(255))),
+	isnull(''Error: '' + @error, cast((_EXAMEN_) as varchar(255))),
 	isnull(case 
 		when @error is not null then 0
 		when (_EXAMEN_) _EXPECTED_ then 1
@@ -171,6 +172,7 @@ select
 	create table #testresults (
 		id int identity,
 		name nvarchar(255),
+		act nvarchar(255),
 		test nvarchar(255),
 		expected nvarchar(255),
 		actual nvarchar(255),
@@ -241,6 +243,10 @@ select
 					examen   = ass.ert.value('.', 'nvarchar(255)'),
 					expected = ass.ert.value('@expected', 'nvarchar(1000)')
 				from @testxml.nodes('test/assert')ass(ert)
+			), vars as (
+				select
+					hasReturn = (select count(*) from returntable),
+					actSql = trim(@testxml.value('(test/act)[1]', 'nvarchar(max)'))
 			)
 			select
 			@sqlpost =
@@ -283,7 +289,7 @@ select
 				.value('.', 'nvarchar(max)'),
 
 			@sqlpre =
-				case (select count(*) from returntable) when 0 then '' else
+				case hasReturn when 0 then '' else
 					replace(@CREATE_RETURN_SNIP, '_TABLECOLUMNS_', (
 						select ',' + @nl +
 							'	' + colname + ' ' + coltype
@@ -294,7 +300,7 @@ select
 				end,
 
 			@sqlact = replace(@ACT_SNIP, '_EXEC_ACT_',
-				case (select count(*) from returntable) when 0 then '' else
+				case hasReturn when 0 then '' else
 					replace(@INSERT_RETURN_SNIP, '_TABLECOLUMNS_', (
 						select ',' + colname
 						from returntable
@@ -302,12 +308,14 @@ select
 					)
 					.value('fn:substring(., 2)', 'nvarchar(max)'))
 				end +
-				trim(@testxml.value('(test/act)[1]', 'nvarchar(max)'))),
+				actSql),
 
 			@sqlassert =
 				(
-					select replace(replace(replace(replace(replace(@INSERT_RESULT_SNIP,
+					select replace(replace(replace(replace(
+							replace(replace(@INSERT_RESULT_SNIP,
 						'_TEST_NAME_',    replace(@name,    '''', '''''')),
+						'_ACT_ESC_',      replace(actSql,   '''', '''''')),
 						'_EXAMEN_ESC_',   replace(examen,   '''', '''''')),
 						'_EXPECTED_ESC_', replace(expected, '''', '''''')),
 						'_EXAMEN_', examen),
@@ -316,6 +324,8 @@ select
 					for xml path(''), type
 				)
 				.value('.', 'nvarchar(max)')
+
+			from vars
 
 			set @sqltotal = isnull(@sqlpost + @sqlmock, '') + @sqlpre + @sqlact + @sqlassert + isnull(@sqlpost, '')
 
