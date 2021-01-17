@@ -78,7 +78,9 @@ The `RunUnitTests` proc accepts the following input XML:
 		_(single quotes doubled here because this xml is defined with a single quote delimited string)_
 	-	`<assert expected=" = 16.06">select total_incl_vat from #utreturns where customer_name = ''Jane Doe''</assert>`
 -	`</test>`
-
+-	`<returns>` _(optional)_  
+	If multiple tests all return the same type of result-set, the `<returns>` part described above can be placed outside the tests. All tests that don't contain their own `<returns>` as a child-node will fall back on this.
+-	`</returns>`
 `</unittests>'`
 
 Interpret test-results
