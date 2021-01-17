@@ -184,6 +184,7 @@ select
 	declare @name nvarchar(255)
 	declare @utprefix nvarchar(255)
 	declare @envprefix nvarchar(255)
+	declare @returnsxml xml
 	declare @sqlmock nvarchar(max)
 	declare @sqlpre nvarchar(max)
 	declare @sqlact nvarchar(max)
@@ -202,6 +203,11 @@ select
 			set @name = @testxml.value('(test/@name)[1]', 'nvarchar(255)')
 			set @utprefix = @testxml.value('(test/prefix/@ut)[1]', 'nvarchar(255)')
 			set @envprefix = isnull(@testxml.value('(test/prefix/@dev)[1]', 'nvarchar(255)'), '')
+			set @returnsxml = case 1
+				when @testxml.exist('(test/returns)[1]')
+				then @testxml.query('(test/returns)[1]')
+				else @unittests.query('(unittests/returns)[1]')
+			end
 
 			;with mockdata as (
 				select
@@ -229,7 +235,7 @@ select
 				select 
 					colname = ret.urns.value('local-name(.)', 'nvarchar(50)'),
 					coltype = ret.urns.value('./@type', 'nvarchar(50)')
-				from @testxml.nodes('test/returns/*')ret(urns)
+				from @returnsxml.nodes('returns/*')ret(urns)
 			), assertions as (
 				select
 					examen   = ass.ert.value('.', 'nvarchar(255)'),
